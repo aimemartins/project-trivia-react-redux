@@ -3,6 +3,8 @@ import { screen } from '@testing-library/react';
 import Game from '../../pages/Game';
 import { questionsResponse } from './mockData';
 import userEvent from '@testing-library/user-event';
+import App from '../../App';
+jest.setTimeout(50000);
 
 describe('Testes do componente Game', () => {
   beforeEach(() => {
@@ -63,5 +65,48 @@ describe('Testes do componente Game', () => {
     const incorrectAnswers = await screen.findAllByTestId(/wrong-answer/);
     userEvent.click(incorrectAnswers[0]);
     expect(incorrectAnswers[0]).toHaveClass('btn_vermelho');
+  });
+  it('Ao clicar na resposta correta, pontos devem ser somados no placar da pessoa que está jogando', async () => {
+    renderWithRouterAndRedux(<Game />, {}, '/game');
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const headerScore = await screen.findByTestId('header-score');
+    expect(headerScore.innerHTML).toBe('0');
+    const correctAnswer = await screen.findByTestId('correct-answer');
+    userEvent.click(correctAnswer);
+    expect(headerScore.innerHTML).toBe('40');
+  });
+  it('Ao clicar em uma resposta incorreta, nenhum ponto deve ser somado', async () => {
+    renderWithRouterAndRedux(<Game />, {}, '/game');
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const headerScore = await screen.findByTestId('header-score');
+    expect(headerScore.innerHTML).toBe('0');
+    const incorrectAnswers = await screen.findAllByTestId(/wrong-answer/);
+    userEvent.click(incorrectAnswers[0]);
+    expect(headerScore.innerHTML).toBe('0');
+  });
+  it('A pessoa jogadora deve responder 5 perguntas no total', async () => {
+    const { history } = renderWithRouterAndRedux(<App />, {}, '/game');
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    for (let i = 0; i <= 4; i++) {
+      userEvent.click(await screen.findByTestId('correct-answer'));
+      userEvent.click(await screen.findByTestId('btn-next'));
+    }
+    expect(history.location.pathname).toBe('/feedback');
+  });
+  it('Deve existir um timer em que a pessoa tem 30 segundos para responder', async () => {
+    renderWithRouterAndRedux(<App />, {}, '/game');
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const timer = await screen.findByTestId('question-timer');
+    const incorrectAnswers = await screen.findAllByTestId(/wrong-answer/);
+    const correctAnswer = await screen.findByTestId('correct-answer');
+    expect(timer).toBeInTheDocument();
+    expect(timer.innerHTML).toBe('30');
+    await new Promise((test) => setTimeout(test, 32000));
+    const newTimer = await screen.findByTestId('question-timer');
+    expect(newTimer.innerHTML).toBe('0');
+    expect(correctAnswer).toHaveClass('btn_verde');
+    expect(correctAnswer).toBeDisabled();
+    expect(incorrectAnswers[0]).toHaveClass('btn_vermelho');
+    expect(incorrectAnswers[0]).toBeDisabled();
   });
 });

@@ -157,7 +157,7 @@ class Game extends React.Component {
             ? (
               <div>
                 <h1 data-testid="question-category">{triviaResult[contador].category}</h1>
-                <p>{ timer }</p>
+                <p data-testid="question-timer">{ timer }</p>
                 <p data-testid="question-text">{triviaResult[contador].question}</p>
                 <div data-testid="answer-options">
                   {pack.answers?.map((answer, index) => (
