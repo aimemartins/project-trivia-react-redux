@@ -1,6 +1,7 @@
 import renderWithRouterAndRedux from './renderWithRouterAndRedux';
 import { screen } from '@testing-library/react';
 import App from '../../App';
+import userEvent from '@testing-library/user-event';
 
 describe('Testes do componente Ranking', () => {
   const localStorageMock = (function () {
@@ -51,8 +52,10 @@ describe('Testes do componente Ranking', () => {
     expect(localStorage.getItem('usersData')).toEqual(
       JSON.stringify(usersData)
     );
-    renderWithRouterAndRedux(<App />, {}, '/ranking');
+    const { history } = renderWithRouterAndRedux(<App />, {}, '/ranking');
     const homeButton = screen.getByTestId('btn-go-home');
     expect(homeButton).toBeInTheDocument();
+    userEvent.click(homeButton);
+    expect(history.location.pathname).toBe('/');
   });
 });

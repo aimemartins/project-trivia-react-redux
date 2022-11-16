@@ -12,6 +12,48 @@ jest.mock('react-router-dom', () => ({
 }));
 
 describe('Testes do componente Feedback', () => {
+  const localStorageMock = (function () {
+    let store = {};
+    return {
+      getItem(key) {
+        return store[key];
+      },
+
+      setItem(key, value) {
+        store[key] = value;
+      },
+
+      clear() {
+        store = {};
+      },
+
+      removeItem(key) {
+        delete store[key];
+      },
+
+      getAll() {
+        return store;
+      },
+    };
+  })();
+
+  Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+  const usersData = [
+    {
+      userName: 'typhlero',
+      score: 0,
+      userEmail: 'tryber@teste.com',
+    },
+  ];
+
+  const setLocalStorage = (id, data) => {
+    window.localStorage.setItem(id, JSON.stringify(data));
+  };
+
+  afterEach(() => {
+    window.localStorage.clear();
+  });
   it('Deve possuir uma imagem do perfil, o nome da pessoa e o placar atual', () => {
     renderWithRouterAndRedux(<Feedback />);
     const profilePicture = screen.getByTestId('header-profile-picture');
@@ -34,5 +76,16 @@ describe('Testes do componente Feedback', () => {
     expect(playAgainButton).toBeInTheDocument();
     userEvent.click(playAgainButton);
     expect(history.location.pathname).toBe('/');
+  });
+  it('Deve existir um botão Ranking que ao ser clicado leva para pagina ranking', () => {
+    const { history } = renderWithRouterAndRedux(<App />, {}, '/feedback');
+    const rankingButton = screen.getByTestId('btn-ranking');
+    expect(rankingButton).toBeInTheDocument();
+    setLocalStorage('usersData', usersData);
+    expect(localStorage.getItem('usersData')).toEqual(
+      JSON.stringify(usersData)
+    );
+    userEvent.click(rankingButton);
+    expect(history.location.pathname).toBe('/ranking');
   });
 });
